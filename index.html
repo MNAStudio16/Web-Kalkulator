@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNA Academic Calculator</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+:root{
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --text:#1f2937;
+  --primary:#0f4c81;
+  --accent:#0f4c81;
+}
+body.dark{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --text:#e5e7eb;
+}
+*{box-sizing:border-box;font-family:Inter,Segoe UI,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);transition:.3s}
+header{
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:white;padding:25px
+}
+.header{
+  max-width:1100px;margin:auto;
+  display:flex;justify-content:space-between;align-items:center
+}
+.container{max-width:1100px;margin:auto;padding:20px}
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:22px;
+  margin-bottom:20px;
+  box-shadow:0 15px 30px rgba(0,0,0,.08)
+}
+select,input,button{
+  width:100%;padding:12px;margin-top:10px;
+  border-radius:10px;border:1px solid #cbd5e1;
+  background:transparent;color:var(--text)
+}
+button{
+  background:var(--primary);
+  color:white;border:none;cursor:pointer
+}
+button:hover{opacity:.9}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px
+}
+.sem-box,.mapel-box{
+  border:1px solid #cbd5e1;
+  padding:15px;border-radius:14px
+}
+.toggle{
+  background:none;border:1px solid rgba(255,255,255,.5);
+  color:white;padding:8px 14px;border-radius:20px
+}
+.hidden{display:none}
+footer{text-align:center;padding:25px;font-size:14px}
+.social a{margin:0 12px;color:var(--primary);font-size:20px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header">
+    <div>
+      <h2>MNA Academic Calculator</h2>
+      <p>Hitung Nilai Rapor SMP & SMA</p>
+    </div>
+    <button class="toggle" onclick="toggleDark()">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+  </div>
+</header>
+
+<div class="container">
+
+<div class="card">
+  <h3>Pengaturan</h3>
+
+  <select id="jenjang" onchange="resetMapel()">
+    <option value="SMP">SMP</option>
+    <option value="SMA">SMA</option>
+  </select>
+
+  <select id="semesterCount" onchange="renderAll()">
+    <option value="1">1 Semester</option>
+    <option value="2">2 Semester</option>
+    <option value="3">3 Semester</option>
+    <option value="4">4 Semester</option>
+    <option value="5">5 Semester</option>
+  </select>
+
+  <select id="mode" onchange="renderAll()">
+    <option value="simple">Mode Simple (Per Semester)</option>
+    <option value="detail">Mode Detail (Per Mapel)</option>
+  </select>
+</div>
+
+<!-- MODE SIMPLE -->
+<div class="card" id="simpleBox">
+  <h3>Rata-rata per Semester</h3>
+  <div id="simpleContainer" class="grid"></div>
+</div>
+
+<!-- MODE DETAIL -->
+<div class="card hidden" id="detailBox">
+  <h3>Nilai per Mapel</h3>
+
+  <input id="mapelInput" placeholder="Tambah mapel opsional">
+  <button onclick="addMapel()">Tambah Mapel</button>
+
+  <div id="mapelContainer"></div>
+</div>
+
+<div class="card">
+  <button onclick="hitung()">Hitung Nilai Akhir</button>
+  <h1 id="hasil">-</h1>
+</div>
+
+</div>
+
+<footer>
+  <p>© 2025 MNA Studio IX-F</p>
+</footer>
+
+<script>
+const defaultMapel={
+  SMP:["Matematika","IPA","IPS","Bahasa Indonesia","Bahasa Inggris","PPKn"],
+  SMA:["Matematika","Bahasa Indonesia","Bahasa Inggris","Fisika","Kimia","Biologi"]
+};
+
+let mapelList=[];
+
+function resetMapel(){
+  const jenjang=document.getElementById("jenjang").value;
+  mapelList=[...defaultMapel[jenjang]];
+  renderAll();
+}
+
+function renderAll(){
+  const mode=document.getElementById("mode").value;
+  document.getElementById("simpleBox").classList.toggle("hidden",mode!=="simple");
+  document.getElementById("detailBox").classList.toggle("hidden",mode!=="detail");
+  renderSimple();
+  renderDetail();
+}
+
+function renderSimple(){
+  const jml=document.getElementById("semesterCount").value;
+  const box=document.getElementById("simpleContainer");
+  box.innerHTML="";
+  for(let i=1;i<=jml;i++){
+    box.innerHTML+=`
+      <div class="sem-box">
+        <h4>Semester ${i}</h4>
+        <input type="number" class="simple" placeholder="Nilai rata-rata">
+      </div>`;
+  }
+}
+
+function addMapel(){
+  const val=document.getElementById("mapelInput").value;
+  if(!val)return;
+  mapelList.push(val);
+  document.getElementById("mapelInput").value="";
+  renderDetail();
+}
+
+function renderDetail(){
+  const jml=document.getElementById("semesterCount").value;
+  const box=document.getElementById("mapelContainer");
+  box.innerHTML="";
+  mapelList.forEach(m=>{
+    let html=`<div class="mapel-box"><h4>${m}</h4>`;
+    for(let i=1;i<=jml;i++){
+      html+=`<input type="number" class="detail" placeholder="Semester ${i}">`;
+    }
+    html+=`</div>`;
+    box.innerHTML+=html;
+  });
+}
+
+function hitung(){
+  const mode=document.getElementById("mode").value;
+  const nilai=[...document.querySelectorAll(mode==="simple"?".simple":".detail")]
+    .map(n=>parseFloat(n.value)).filter(n=>!isNaN(n));
+  document.getElementById("hasil").innerText=
+    nilai.length?(nilai.reduce((a,b)=>a+b)/nilai.length).toFixed(2):"-";
+}
+
+function toggleDark(){
+  document.body.classList.toggle("dark");
+}
+
+resetMapel();
+</script>
+
+</body>
+</html>
